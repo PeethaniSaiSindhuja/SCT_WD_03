@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🎮 Ultimate Tic Tac Toe</title>
+  <style>
+    :root {
+      --bg: linear-gradient(to right, #1c1c1c, #3a3a3a);
+      --glass: rgba(255, 255, 255, 0.4);
+      --text: #fff;
+      --x-color: #FF00FF; /* Neon pink for X */
+      --o-color: #00FFFF; /* Neon cyan for O */
+      --btn-bg: linear-gradient(135deg, #00FF00, #FF00FF); /* Neon green to pink */
+      --btn-hover: linear-gradient(135deg, #FF00FF, #00FFFF); /* Neon pink to cyan */
+      --btn-active: #00FF00;
+      --win-color: #FF6347; /* Neon red-orange for win */
+      --lose-color: #FF1493; /* Neon deep pink for loss */
+      --draw-color: #8A2BE2; /* Neon blue-violet for draw */
+      --modal-bg: rgba(255, 255, 255, 0.2);
+      --hint-bg: #FF4500;
+      --hint-text: #FF6347;
+    }
+
+    body {
+      background: var(--bg);
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+      color: var(--text);
+      transition: background 0.5s ease, color 0.5s ease;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 15px;
+      color: var(--x-color);
+      text-shadow: 0 0 15px var(--x-color), 0 0 30px var(--x-color);
+    }
+
+    .settings, .mode-select, .scoreboard, .status-container {
+      margin-top: 20px;
+    }
+
+    button {
+      background: var(--btn-bg);
+      color: #fff;
+      border: none;
+      border-radius: 25px;
+      padding: 12px 25px;
+      margin: 10px;
+      font-size: 18px;
+      cursor: pointer;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background: var(--btn-hover);
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    button.active {
+      background: var(--btn-active);
+      transform: scale(1.1);
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 120px);
+      gap: 12px;
+      justify-content: center;
+      margin: 40px auto;
+      padding: 20px;
+      transition: all 0.4s ease;
+    }
+
+    .cell {
+      width: 120px;
+      height: 120px;
+      font-size: 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 15px;
+      background: var(--glass);
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      color: var(--text);
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.1);
+      transition: background 0.3s, transform 0.3s;
+    }
+
+    .cell:hover {
+      background-color: rgba(255, 255, 255, 0.3);
+      transform: scale(1.1);
+    }
+
+    .cell.x {
+      color: var(--x-color);
+      font-weight: bold;
+      text-shadow: 0 0 10px var(--x-color), 0 0 20px var(--x-color);
+    }
+
+    .cell.o {
+      color: var(--o-color);
+      font-weight: bold;
+      text-shadow: 0 0 10px var(--o-color), 0 0 20px var(--o-color);
+    }
+
+    .cell.win {
+      animation: pulse 1s infinite alternate;
+      background-color: var(--win-color); /* Neon red-orange for the winning combination */
+      box-shadow: 0 0 15px 5px rgba(255, 99, 71, 0.7); /* Glowing effect */
+      transform: scale(1.1); /* Slightly enlarge the winning cells */
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+      100% {
+        transform: scale(1.1);
+      }
+    }
+
+    .scoreboard {
+      font-size: 20px;
+      margin-top: 20px;
+      color: var(--text);
+    }
+
+    .scoreboard span {
+      font-weight: bold;
+      margin: 0 6px;
+    }
+
+    .status-container {
+      font-size: 24px;
+      font-weight: bold;
+      margin-top: 25px;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 15px;
+      display: inline-block;
+      transition: all 0.3s ease;
+      color: var(--text);
+    }
+
+   .modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7); /* Keep the background slightly transparent */
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: #000; /* Solid black background */
+  color: whitesmoke; /* Change text color to white */
+  padding: 30px;
+  border-radius: 15px;
+  max-width: 420px;
+  width: 80%;
+  /* Removed the box-shadow property */
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  color: var(--x-color);
+}
+
+.modal-content p {
+  margin: 10px 0;
+}
+
+.close-modal {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--x-color);
+}
+
+.hint-modal-content {
+  background: var(--hint-bg);
+  color: var(--hint-text);
+  border: 2px solid #FF6347;
+  /* Removed the box-shadow property */
+}
+
+    .exit-modal {
+      background-color: var(--lose-color);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 10px 25px;
+      cursor: pointer;
+      font-size: 18px;
+      margin-top: 20px;
+    }
+
+    .exit-modal:hover {
+      background-color: #FF1493;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎮 Ultimate Tic Tac Toe</h1>
+
+  <div class="settings">
+    <button onclick="setGameMode('pvp')">🧑‍🤝‍🧑 Player vs Player</button>
+    <button onclick="setGameMode('ai')">🧑‍🤖 Player vs AI</button>
+    <button onclick="toggleSound()">🔊 Sound: <span id="soundStatus">On</span></button>
+    <button onclick="showInstructions()">❓ Instructions</button>
+  </div>
+
+  <div class="scoreboard">
+    🧑 X: <span id="xScore">0</span> |
+    🧑 O: <span id="oScore">0</span> |
+    🤝 Draws: <span id="drawScore">0</span>
+  </div>
+
+  <div class="status-container" id="status">Choose a mode to start</div>
+  <div class="board" id="board"></div>
+
+  <!-- Add Undo Button -->
+  <button id="undoButton" onclick="undoMove()" disabled>↩️ Undo Move</button>
+
+  <button onclick="resetGame()">🔄 Restart Game</button>
+
+  <audio id="clickSound" src="mouse-click-290204.mp3"></audio>
+  <audio id="winSound" src="level-win-6416.mp3"></audio>
+  <audio id="loseSound" src="violin-lose-3-180435.mp3"></audio>
+
+  <!-- Modal for Instructions -->
+  <div class="modal" id="instructionModal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeInstructions()">×</span>
+      <h2>How to Play</h2>
+      <p>The game is played on a 3x3 grid. You are playing as either "X" or "O". Players take turns to place their mark in an empty cell. The goal is to get 3 of your marks in a row, column, or diagonal.</p>
+      <p>If you're playing against AI, the AI will make its move automatically after you make your move.</p>
+      <p><strong>Hint:</strong> Try to block your opponent from getting 3 in a row and also look for opportunities to get your own 3-in-a-row!</p>
+      <button class="exit-modal" onclick="closeInstructions()">Exit</button>
+    </div>
+  </div>
+
+  <script>
+    let board = Array(9).fill("");
+    let currentPlayer = "X";
+    let gameActive = false;
+    let vsMode = null;
+    let soundOn = true;
+    let xScore = 0, oScore = 0, drawScore = 0;
+    let history = [];  // To store the history of moves
+
+    const statusDisplay = document.getElementById("status");
+    const boardElement = document.getElementById("board");
+    const clickSound = document.getElementById("clickSound");
+    const winSound = document.getElementById("winSound");
+    const loseSound = document.getElementById("loseSound");
+    const soundStatus = document.getElementById("soundStatus");
+    const undoButton = document.getElementById("undoButton");  // Undo button reference
+
+    const scoreEls = {
+      x: document.getElementById("xScore"),
+      o: document.getElementById("oScore"),
+      draw: document.getElementById("drawScore"),
+    };
+
+    const instructionModal = document.getElementById("instructionModal");
+
+    function toggleSound() {
+      soundOn = !soundOn;
+      soundStatus.textContent = soundOn ? "On" : "Off";
+    }
+
+    function setGameMode(mode) {
+      const modeButtons = document.querySelectorAll('.settings button');
+      modeButtons.forEach(button => button.classList.remove('active'));
+      const selectedButton = mode === 'pvp' ? document.querySelector('button[onclick="setGameMode(\'pvp\')"]') :
+                                mode === 'ai' ? document.querySelector('button[onclick="setGameMode(\'ai\')"]') : null;
+      if (selectedButton) {
+        selectedButton.classList.add('active');
+      }
+
+      vsMode = mode;
+      resetGame();
+      gameActive = true;
+      statusDisplay.textContent = `🔄 ${currentPlayer}'s Turn`;
+    }
+
+    function resetGame() {
+      board = Array(9).fill("");
+      currentPlayer = "X";
+      gameActive = true;
+      history = [];  // Reset the history
+      undoButton.disabled = true;  // Disable undo at the start
+      renderBoard();
+      statusDisplay.textContent = `🔄 ${currentPlayer}'s Turn`;
+    }
+
+    function renderBoard() {
+      boardElement.innerHTML = "";
+      board.forEach((val, idx) => {
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        if (val) cell.classList.add(val.toLowerCase());
+        cell.textContent = val;
+        cell.dataset.index = idx;
+        cell.addEventListener("click", handleClick);
+        boardElement.appendChild(cell);
+      });
+    }
+
+    function handleClick(e) {
+      const idx = e.target.dataset.index;
+      if (board[idx] || !gameActive) return;
+
+      playSound(clickSound);
+      makeMove(idx);
+
+      if (vsMode === "ai" && gameActive) {
+        setTimeout(() => {
+          const aiIndex = getRandomMove();
+          makeMove(aiIndex);
+        }, 400);
+      }
+    }
+
+    function makeMove(index) {
+      history.push({ index, player: currentPlayer });  // Save history of moves
+      board[index] = currentPlayer;
+      renderBoard();
+      undoButton.disabled = false;  // Enable undo after a move
+
+      const winPattern = checkWin();
+      if (winPattern) {
+        winPattern.forEach(i => boardElement.children[i].classList.add("win"));
+        updateScore(currentPlayer);
+
+        // Check the game mode and play sound accordingly
+        if (vsMode === 'ai') {
+          // In Player vs AI mode
+          if (currentPlayer === "X") {
+            statusDisplay.textContent = `🎉 ${currentPlayer} Wins!`;
+            playSound(winSound);  // X wins, play win sound
+          } else {
+            statusDisplay.textContent = `😞 ${currentPlayer} Wins!`;
+            playSound(loseSound); // O wins, play lose sound
+          }
+        } else {
+          // In Player vs Player mode
+          statusDisplay.textContent = `🎉 ${currentPlayer} Wins!`;
+          playSound(winSound);  // Play win sound regardless of who wins
+        }
+
+        gameActive = false;
+        return;
+      }
+
+      if (board.every(cell => cell !== "")) {
+        drawScore++;
+        scoreEls.draw.textContent = drawScore;
+        statusDisplay.textContent = "🤝 It's a Draw!";
+        playSound(loseSound);  
+        gameActive = false;
+        return;
+      }
+
+      currentPlayer = currentPlayer === "X" ? "O" : "X";
+      statusDisplay.textContent = `🔄 ${currentPlayer}'s Turn`;
+    }
+
+    function checkWin() {
+      const winPatterns = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],  // Rows
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],  // Columns
+        [0, 4, 8], [2, 4, 6]  // Diagonals
+      ];
+
+      for (const pattern of winPatterns) {
+        const [a, b, c] = pattern;
+        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+          return pattern;
+        }
+      }
+      return null;
+    }
+
+    function updateScore(player) {
+      if (player === "X") xScore++;
+      else if (player === "O") oScore++;
+      scoreEls.x.textContent = xScore;
+      scoreEls.o.textContent = oScore;
+    }
+
+    function getRandomMove() {
+      const availableMoves = board.reduce((acc, val, idx) => {
+        if (!val) acc.push(idx);
+        return acc;
+      }, []);
+      return availableMoves[Math.floor(Math.random() * availableMoves.length)];
+    }
+
+    function playSound(sound) {
+      if (soundOn) sound.play();
+    }
+
+    function undoMove() {
+      const lastMove = history.pop();
+      if (!lastMove) return;
+
+      board[lastMove.index] = "";
+      renderBoard();
+      currentPlayer = lastMove.player;
+      statusDisplay.textContent = `🔄 ${currentPlayer}'s Turn`;
+    }
+
+    function showInstructions() {
+      instructionModal.style.display = "flex";
+    }
+
+    function closeInstructions() {
+      instructionModal.style.display = "none";
+    }
+  </script>
+
+</body>
+</html>
